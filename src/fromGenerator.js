@@ -1,21 +1,39 @@
-/*
+const { Readable } = require('stream');
 
-implement function returning Readable Stream
-of objects from supplied generator
-
-Sample: usage
 function* generator(limit) {
-	for (let i = 1; i <= limit; i++) yield i;
+    for (let i = 1; i < limit; i++) {
+        yield i;
+    }
 }
-let sequence = generator(10000);
 
-fromGenerator(sequence).on("data", function(data){
-	console.log()
-});
+class fromGenerator extends Readable {
+    _read() {
+        let b, data;
+        do {
+            data = this.resource.next();
+            if (!data.done) {
+                let dataChunk = data.value;
+                b = this.push(dataChunk);
+            } else {
 
-fromGenerator(sequence).pipe(stringify).pipe(process.stdout);
-*/
-module.exports = function(generator) {
-
-
+                this.push(null);
+                return;
+            }
+        }
+        while (b);
+    }
+    constructor(options, generator) {
+        super(options);
+        if (generator)
+            this.resource = generator;
+        else {
+            console.log("Undefined generator");
+        }
+    }
 }
+
+
+module.exports = {
+    fromGenerator: fromGenerator,
+    generator: generator,
+};
