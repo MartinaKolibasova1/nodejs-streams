@@ -23,21 +23,36 @@ describe("transform stream", function() {
 
     it ("should filter objects", function() {
         let collection = re.generator(10);
-        let readStream = new re.fromGenerator({objectMode: true},collection);
-        let mapStream = obj.filter((x) => x > 2);
+        let readStream = new re.fromGenerator({objectMode: true}, collection);
+        let filterStream = obj.filter((x) => x > 2);
 
         let arr = [];
-        let result = [3,4,5,6,7,8,9];
+        let result = [3,4,5,6,7,8,9,];
 
-        readStream.pipe(mapStream);
+        readStream.pipe(filterStream);
 
-        mapStream.on('data', function(data) {
+        filterStream.on('data', function(data) {
             arr.push(data);
         });
-        mapStream.on('end', function() {
+        filterStream.on('end', function() {
             assert.deepEqual(arr, result);
         });
 
         //readStream.pipe(mapStream).pipe(process.stdout);
+    });
+
+    it("Filterduplicates should return only unique values", function(done) {
+
+        let collection = re.generator(10);
+        let collection1 = re.generator(10);
+        let readStream = new re.fromGenerator({objectMode: true}, collection);
+        let filterStream = obj.filter(obj.filterDuplicate());
+
+        readStream
+            .pipe(filterStream)
+                .on("data", chunk => {
+                    assert.equal(chunk, collection.next().value);
+                })
+                .on("end", () => done());
     });
 });
